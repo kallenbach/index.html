@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reinos de Ferro — Criador de Personagem</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+
+:root {
+  --iron: #1a1a1f;
+  --rust: #8B3A1A;
+  --rust-light: #C0522A;
+  --gold: #B8922A;
+  --gold-light: #D4A840;
+  --smoke: #2a2a30;
+  --ash: #3a3a42;
+  --silver: #9a9aaa;
+  --paper: #f0e8d8;
+  --paper-dark: #d8cdb8;
+  --steam: #c8d8e0;
+  --glow: rgba(184,146,42,0.15);
+  --red: #8B1A1A;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--iron);
+  color: var(--paper);
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Background texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 40px 0 30px;
+  border-bottom: 1px solid rgba(184,146,42,0.3);
+  margin-bottom: 30px;
+}
+
+.header-ornament {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+
+.header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(24px, 5vw, 40px);
+  font-weight: 700;
+  color: var(--gold-light);
+  text-shadow: 0 0 30px rgba(184,146,42,0.4);
+  letter-spacing: 0.05em;
+}
+
+.header p {
+  color: var(--silver);
+  font-style: italic;
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+/* Steps progress */
+.steps-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 32px;
+  padding: 0 10px;
+}
+
+.step-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.step-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  cursor: default;
+}
+
+.step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ash);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--smoke);
+  color: var(--silver);
+  transition: all 0.3s;
+}
+
+.step-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--silver);
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+
+.step-line {
+  flex: 1;
+  height: 1px;
+  background: var(--ash);
+  margin: 0 4px;
+  margin-bottom: 22px;
+  transition: background 0.3s;
+}
+
+.step-item.done .step-num { border-color: var(--gold); background: var(--gold); color: var(--iron); }
+.step-item.done .step-label { color: var(--gold); }
+.step-item.done + .step-line, .step-line.done { background: var(--gold); }
+.step-item.active .step-num { border-color: var(--gold-light); color: var(--gold-light); box-shadow: 0 0 12px rgba(184,146,42,0.3); }
+.step-item.active .step-label { color: var(--gold-light); }
+
+/* Panels */
+.panel {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+.panel.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gold-light);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-title::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.panel-sub {
+  color: var(--silver);
+  font-style: italic;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+/* Cards grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--smoke);
+  border: 1px solid var(--ash);
+  border-radius: 4px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--rust);
+  transform: scaleX(0);
+  transition: transform 0.2s;
+}
+
+.card:hover { border-color: var(--gold); background: #2f2f38; }
+.card:hover::before { transform: scaleX(1); }
+.card.selected { border-color: var(--gold-light); background: rgba(184,146,42,0.08); box-shadow: 0 0 20px rgba(184,146,42,0.1); }
+.card.selected::before { transform: scaleX(1); background: var(--gold-light); }
+.card.locked { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+.card.locked::after { content: '✕ Indisponível'; position: absolute; top: 8px; right: 8px; font-size: 10px; color: var(--red); letter-spacing: 0.05em; text-transform: uppercase; }
+
+.card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--paper);
+  margin-bottom: 4px;
+}
+
+.card-sub {
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.card-desc {
+  font-size: 14px;
+  color: var(--silver);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--ash);
+  color: var(--silver);
+  letter-spacing: 0.03em;
+}
+
+.tag.gold { background: rgba(184,146,42,0.12); border-color: rgba(184,146,42,0.3); color: var(--gold-light); }
+.tag.rust { background: rgba(139,58,26,0.15); border-color: rgba(139,58,26,0.4); color: #e07040; }
+.tag.steam { background: rgba(40,80,100,0.2); border-color: rgba(80,160,200,0.3); color: var(--steam); }
+
+/* Stat table */
+.stat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 12px 0;
+}
+.stat-table th {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--ash);
+}
+.stat-table td {
+  padding: 5px 8px;
+  color: var(--paper);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.stat-table td:first-child { color: var(--silver); }
+.stat-table td.highlight { color: var(--gold-light); font-weight: 600; }
+.stat-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* Section box */
+.section-box {
+  background: var(--smoke);
+  border: 1px solid var(--ash);
+  border-radius: 4px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.section-box-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ash);
+}
+
+.inline-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Career selection for step 3 */
+.career-note {
+  background: rgba(184,146,42,0.08);
+  border: 1px solid rgba(184,146,42,0.2);
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--gold-light);
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.career-selected-count {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--silver);
+  margin-bottom: 12px;
+}
+
+.career-selected-count span { color: var(--gold-light); }
+
+/* Archetype benefit selector */
+.benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.benefit-card {
+  background: var(--smoke);
+  border: 1px solid var(--ash);
+  border-radius: 4px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.benefit-card:hover { border-color: var(--gold); }
+.benefit-card.selected { border-color: var(--gold-light); background: rgba(184,146,42,0.08); }
+.benefit-card-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--paper); margin-bottom: 4px; }
+.benefit-card-desc { font-size: 13px; color: var(--silver); font-style: italic; line-height: 1.4; }
+
+/* Navigation buttons */
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ash);
+}
+
+.btn {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  border: 1.5px solid;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+}
+
+.btn-primary {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.btn-primary:hover { background: var(--gold); color: var(--iron); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-ghost {
+  border-color: var(--ash);
+  color: var(--silver);
+}
+.btn-ghost:hover { border-color: var(--silver); color: var(--paper); }
+
+/* Final sheet */
+.sheet {
+  background: var(--smoke);
+  border: 1px solid var(--ash);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sheet-header {
+  background: linear-gradient(135deg, #2a1a0a, #1a1208);
+  border-bottom: 1px solid var(--gold);
+  padding: 24px 28px;
+}
+
+.sheet-name {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold-light);
+  text-shadow: 0 0 20px rgba(184,146,42,0.4);
+}
+
+.sheet-subtitle {
+  font-size: 15px;
+  color: var(--silver);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.sheet-body {
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 600px) { .sheet-body { grid-template-columns: 1fr; } }
+
+.sheet-col {}
+
+.sheet-section {
+  margin-bottom: 20px;
+}
+
+.sheet-section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ash);
+}
+
+.attr-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 15px;
+}
+
+.attr-name { color: var(--silver); }
+
+.attr-vals {
+  display: flex;
+  gap: 12px;
+}
+
+.attr-val { text-align: center; }
+.attr-val-num { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 600; color: var(--paper); }
+.attr-val-lim { font-size: 10px; color: var(--silver); }
+
+.pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--ash);
+  color: var(--paper);
+}
+
+.pill.gold { background: rgba(184,146,42,0.12); border-color: rgba(184,146,42,0.3); color: var(--gold-light); }
+.pill.rust { background: rgba(139,58,26,0.12); border-color: rgba(200,80,30,0.3); color: #e07040; }
+.pill.steam { background: rgba(30,70,90,0.2); border-color: rgba(80,150,200,0.25); color: var(--steam); }
+
+.reset-btn {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* Divider ornament */
+.ornament {
+  text-align: center;
+  color: var(--gold);
+  font-size: 14px;
+  letter-spacing: 0.5em;
+  margin: 4px 0 12px;
+  opacity: 0.5;
+}
+
+/* Spell list in sheet */
+.spell-list-sheet {
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spell-entry { display: flex; gap: 8px; align-items: flex-start; }
+.spell-cst { font-family: 'Cinzel', serif; font-size: 10px; color: var(--gold); min-width: 36px; margin-top: 2px; letter-spacing: 0.05em; }
+.spell-name-s { color: var(--paper); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+  <div class="header-ornament">⚙ Privateer Press · Jambô Editora 2014 ⚙</div>
+  <h1>Reinos de Ferro RPG</h1>
+  <p>Criador de Personagem — Livro Básico</p>
+</div>
+
+<!-- Steps bar -->
+<div class="steps-bar" id="steps-bar">
+  <div class="step-item active" data-step="0">
+    <div class="step-dot">
+      <div class="step-num">1</div>
+      <div class="step-label">Raça</div>
+    </div>
+  </div>
+  <div class="step-line" id="line-0"></div>
+  <div class="step-item" data-step="1">
+    <div class="step-dot">
+      <div class="step-num">2</div>
+      <div class="step-label">Arquétipo</div>
+    </div>
+  </div>
+  <div class="step-line" id="line-1"></div>
+  <div class="step-item" data-step="2">
+    <div class="step-dot">
+      <div class="step-num">3</div>
+      <div class="step-label">Carreiras</div>
+    </div>
+  </div>
+  <div class="step-line" id="line-2"></div>
+  <div class="step-item" data-step="3">
+    <div class="step-dot">
+      <div class="step-num">4</div>
+      <div class="step-label">Benefício</div>
+    </div>
+  </div>
+  <div class="step-line" id="line-3"></div>
+  <div class="step-item" data-step="4">
+    <div class="step-dot">
+      <div class="step-num">5</div>
+      <div class="step-label">Ficha</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1: RAÇA -->
+<div class="panel active" id="panel-0">
+  <div class="panel-title">Escolha sua Raça</div>
+  <div class="panel-sub">Sua raça define seus atributos base, limites de progressão e características únicas do mundo de Immoren.</div>
+  <div class="cards-grid" id="race-grid"></div>
+  <div class="nav-row">
+    <div></div>
+    <button class="btn btn-primary" id="btn-next-0" onclick="nextStep()" disabled>Próximo →</button>
+  </div>
+</div>
+
+<!-- STEP 2: ARQUÉTIPO -->
+<div class="panel" id="panel-1">
+  <div class="panel-title">Escolha seu Arquétipo</div>
+  <div class="panel-sub">O arquétipo define seu papel e estilo de jogo — apenas arquétipos disponíveis para sua raça estão ativos.</div>
+  <div class="cards-grid" id="arch-grid"></div>
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+    <button class="btn btn-primary" id="btn-next-1" onclick="nextStep()" disabled>Próximo →</button>
+  </div>
+</div>
+
+<!-- STEP 3: CARREIRAS -->
+<div class="panel" id="panel-2">
+  <div class="panel-title">Escolha suas Carreiras</div>
+  <div class="panel-sub">Escolha exatamente 2 carreiras. Algumas combinações têm restrições. Perícias duplicadas sobem para nível 2.</div>
+  <div class="career-note" id="career-restriction-note"></div>
+  <div class="career-selected-count">Selecionadas: <span id="career-count">0</span> / 2</div>
+  <div class="cards-grid" id="career-grid"></div>
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+    <button class="btn btn-primary" id="btn-next-2" onclick="nextStep()" disabled>Próximo →</button>
+  </div>
+</div>
+
+<!-- STEP 4: BENEFÍCIO DO ARQUÉTIPO -->
+<div class="panel" id="panel-3">
+  <div class="panel-title">Benefício do Arquétipo</div>
+  <div class="panel-sub" id="benefit-sub">Escolha um benefício inicial do seu arquétipo. Você poderá adquirir mais com experiência.</div>
+  <div class="benefit-grid" id="benefit-grid"></div>
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+    <button class="btn btn-primary" id="btn-next-3" onclick="nextStep()" disabled>Gerar Ficha →</button>
+  </div>
+</div>
+
+<!-- STEP 5: FICHA FINAL -->
+<div class="panel" id="panel-4">
+  <div class="panel-title">Ficha de Personagem</div>
+  <div class="panel-sub">Seu personagem está pronto. Abaixo estão todos os detalhes combinados de raça, arquétipo e carreiras.</div>
+  <div id="sheet-container"></div>
+  <div class="reset-btn">
+    <button class="btn btn-ghost" onclick="resetAll()">⟳ Criar Novo Personagem</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ========== DATA ==========
+
+const RACES = {
+  humano: {
+    name: 'Humano',
+    sub: 'Versátil · Adaptável',
+    desc: 'A raça mais numerosa dos Reinos de Ferro. Pioneiros na alquimia e mekânica, os humanos habitam todos os reinos do continente de Immoren ocidental.',
+    lore: 'Os cinco Reinos de Ferro (Cygnar, Khador, Ord, Llael e Protetorado de Menoth) são todos nações humanas. Sua adaptabilidade os torna excepcionalmente versáteis.',
+    archs: ['dotado','habilidoso','intelectual','poderoso'],
+    attrs: {FIS:[5,7,8,8], VEL:[6,7,7,7], FOR:[4,6,7,8], AGI:[3,5,6,7], DES:[4,5,6,7], MAE:[4,5,6,7], INT:[3,5,6,7], ARC:['*',4,6,8], PER:[3,5,6,7]},
+    special: ['Potencial Excepcional: +1 FIS, AGI ou INT (à sua escolha) no início do jogo.', 'Idiomas: nativo + 1 adicional.'],
+    tags: ['Qualquer Arquétipo','Todos os Reinos'],
+    height: '1,55–1,90 m (M) · 1,40–1,75 m (F)',
+    weight: '55–100 kg (M) · 45–85 kg (F)',
+    lang: 'Cygnarano, Khadorano, Llaelês ou Órdico (+ 1 adicional)',
+  },
+  anao: {
+    name: 'Anão',
+    sub: 'Resistente · Honrado',
+    desc: 'Povo longevo e robusto de Rhul, a nação montanhosa baseada em clãs. Mestres da metalurgia e da mekânica, os anões são guerreiros e artesãos incomparáveis.',
+    lore: 'Rhul é a civilização mais antiga e estável de Immoren ocidental. Os anões são conhecidos por sua honra inabalável e pela complexidade de seus clãs.',
+    archs: ['dotado','habilidoso','intelectual','poderoso'],
+    attrs: {FIS:[6,7,7,8], VEL:[4,5,6,6], FOR:[5,6,7,8], AGI:[3,5,6,7], DES:[3,4,5,6], MAE:[4,5,6,7], INT:[4,5,6,7], ARC:['*',4,6,7], PER:[3,4,6,7]},
+    special: ['Suportar Carga: habilidade gratuita.', 'Conexões (clã anão): conexão gratuita extra.', 'Idiomas: rhúlico + 1 adicional.'],
+    tags: ['Qualquer Arquétipo','Rhul'],
+    height: '1,32–1,52 m (M) · 1,20–1,40 m (F)',
+    weight: '75–95 kg (M) · 53–73 kg (F)',
+    lang: 'Rhúlico + 1 adicional',
+  },
+  iosano: {
+    name: 'Iosano (Elfo)',
+    sub: 'Erudito · Discreto',
+    desc: 'Povo gracioso e longevo da nação isolada de Ios, herdeiro de um vasto império que entrou em colapso. Igualmente versados no combate e nas artes arcanas.',
+    lore: 'Os iosanos estão morrendo — seus números diminuem e enfrentam uma catástrofe cosmológica. Discretos e xenófobos, são profundamente devotos à deusa Scyrah.',
+    archs: ['dotado','habilidoso','intelectual','poderoso'],
+    attrs: {FIS:[5,7,7,7], VEL:[6,7,7,7], FOR:[4,5,6,7], AGI:[3,5,6,7], DES:[4,5,6,7], MAE:[4,5,6,7], INT:[4,6,6,7], ARC:['*',4,6,8], PER:[3,5,6,7]},
+    special: ['Habilidade Adicional: começa com 1 habilidade extra de uma de suas carreiras.', 'Idiomas: shyr + 1 adicional.'],
+    tags: ['Qualquer Arquétipo','Ios'],
+    height: '1,65–1,90 m (M) · 1,52–1,77 m (F)',
+    weight: '63–90 kg (M) · 43–70 kg (F)',
+    lang: 'Shyr + 1 adicional',
+  },
+  nyss: {
+    name: 'Nyss (Elfo das Neves)',
+    sub: 'Caçador · Nórdico',
+    desc: 'Elfos do norte congelado das Espiras Estilhaçadas. Mais altos e fortes que os iosanos, são exímios caçadores, rastreadores e forjadores de armas superiores.',
+    lore: 'Os nyss são um povo tribal adaptado ao extremo norte. Seguem a deusa Nyssor (o Deus do Inverno) e possuem longevidade superior à dos iosanos.',
+    archs: ['dotado','habilidoso','poderoso'],
+    attrs: {FIS:[5,7,7,8], VEL:[6,7,7,7], FOR:[4,6,7,8], AGI:[4,5,6,7], DES:[4,5,6,7], MAE:[4,5,6,7], INT:[3,5,6,6], ARC:['*',4,6,7], PER:[3,5,6,6]},
+    special: ['+1 Iniciativa e PER.', '+3 ARM contra dano de frio.', '–3 ARM contra dano de fogo.', 'Desconto de 10 CO em claymores nyss e arcos nyss.', 'Dotado: não pode ser arcanista, conj. de guerra, mago-pistoleiro ou mek. arcano.'],
+    tags: ['3 Arquétipos','Espiras Estilhaçadas'],
+    height: '1,70–1,95 m (M) · 1,57–1,82 m (F)',
+    weight: '70–98 kg (M) · 48–65 kg (F)',
+    lang: 'Aérico + 1 adicional',
+  },
+  gobber: {
+    name: 'Gobber',
+    sub: 'Ágil · Curioso',
+    desc: 'Pequenos, ágeis e amistosos, os gobbers são trabalhadores habilidosos, comerciantes astutos e pensadores inovadores. Integrados à sociedade humana.',
+    lore: 'Gobbers têm afinidade natural com alquimia e engenharia. Sua pele muda de cor conforme o humor. São das três raças dhunianas que adoram a deusa-mãe.',
+    archs: ['habilidoso','intelectual','poderoso'],
+    attrs: {FIS:[4,6,7,7], VEL:[6,7,7,7], FOR:[3,4,5,6], AGI:[4,5,6,7], DES:[3,5,6,7], MAE:[4,5,6,7], INT:[3,4,5,6], ARC:[null,null,null,null], PER:[3,4,4,5]},
+    special: ['Ágil: benefício de arquétipo gratuito.', '+1 DEF permanente.', 'Não pode usar armas grandes ou fuzis.', 'Sem ARC: não pode ser Dotado ou usar magia.'],
+    tags: ['3 Arquétipos','Sem Magia'],
+    height: '0,86–1,06 m (M) · 0,81–1,01 m (F)',
+    weight: '21–30 kg (M) · 19–28 kg (F)',
+    lang: 'Gobberês + 1 adicional',
+  },
+  trolloide: {
+    name: 'Trolloide',
+    sub: 'Possante · Regeneração',
+    desc: 'Guerreiros formidáveis organizados em sociedades tribais chamadas kriels. Profundamente honrados e religiosos, possuem regeneração natural e força bruta.',
+    lore: 'Os trolloides resistem fora dos Reinos de Ferro, em kriels liderados por xamãs. Seu sangue é o elemento central de sua cultura e espiritualidade.',
+    archs: ['dotado','habilidoso','poderoso'],
+    attrs: {FIS:[6,8,9,10], VEL:[5,6,6,6], FOR:[5,7,8,9], AGI:[3,5,6,7], DES:[2,4,5,6], MAE:[4,5,6,7], INT:[3,4,5,6], ARC:['*',4,6,7], PER:[3,4,5,6]},
+    special: ['Durão: benefício de arquétipo gratuito.', 'Façanha: Revitalizar: benefício de arquétipo gratuito.', 'Dotado: não pode ser arcanista, conj. de guerra ou mek. arcano.'],
+    tags: ['3 Arquétipos','Kriels','Regeneração'],
+    height: '1,80–2,13 m (M) · 1,60–1,93 m (F)',
+    weight: '125–165 kg (M) · 75–115 kg (F)',
+    lang: 'Morgur-trul + 1 adicional',
+  },
+  ogrun: {
+    name: 'Ogrun',
+    sub: 'Força Bruta · Leal',
+    desc: 'Criaturas formidáveis de aspecto feroz, mais altos que todas as outras raças. Honrados e leais como nenhum outro povo, os melhores guarda-costas de Immoren.',
+    lore: 'A maioria vive em Rhul, integrados aos clãs anões. Sua lealdade é lendária. Sem ARC — nunca podem usar magia.',
+    archs: ['habilidoso','poderoso'],
+    attrs: {FIS:[6,7,8,9], VEL:[5,6,6,6], FOR:[6,8,9,10], AGI:[3,5,5,6], DES:[3,4,5,6], MAE:[4,5,6,7], INT:[3,5,5,6], ARC:[null,null,null,null], PER:[2,4,5,6]},
+    special: ['Estatura Enorme: pode empunhar armas de 2 mãos com 1 mão (–2 no ataque).', 'Idiomas: molgur-og + rhúlico + 1 adicional (3 no total).', 'Sem ARC: nunca pode usar magia.'],
+    tags: ['2 Arquétipos','Sem Magia','Rhul/Mercenário'],
+    height: '2,28–2,66 m (M) · 2,08–2,46 m (F)',
+    weight: '225–250 kg (M) · 165–190 kg (F)',
+    lang: 'Molgur-og + Rhúlico + 1 adicional',
+  },
+};
+
+const ARCHETYPES = {
+  dotado: {
+    name: 'Dotado',
+    sub: 'Usuário de Magia',
+    icon: '✦',
+    desc: 'Você nasceu com a capacidade de usar magia. Único arquétipo que permite ter o atributo ARC e escolher carreiras mágicas.',
+    rule: 'Ao atacar, NÃO ganha ataque extra. Pode lançar magias usando foco (focalizador) ou fadiga (tecelão da vontade).',
+    careers_magic: true,
+    benefits: [
+      {name:'Círculo de Proteção', desc:'Gaste 15min para criar círculo de runas que alerta quando estranhos entram. Mortos-vivos/infernais sofrem –2 ataque dentro do círculo.'},
+      {name:'Conjurador de Combate', desc:'Ao fazer ataque mágico, role um dado extra e elimine o menor.'},
+      {name:'Conjurador Rápido', desc:'Ganhe 1 ação rápida adicional que só pode ser usada para lançar magias.'},
+      {name:'Estudo Adicional', desc:'Ganhe 1 magia adicional da sua lista. Pode ser escolhido múltiplas vezes (máx: INT×2 magias).'},
+      {name:'Façanha: Conjurador Poderoso', desc:'Gaste 1 ponto de façanha para aumentar o alcance de uma magia em 4m.'},
+      {name:'Façanha: Conjurador Veloz', desc:'Gaste 1 ponto de façanha para lançar uma magia mantida no início do combate sem pagar o custo.'},
+      {name:'Façanha: Convicção', desc:'(Só tecelão da vontade) Gaste 1 façanha para ter sucesso automático em um teste de fadiga.'},
+      {name:'Façanha: Dominador', desc:'Gaste 1 façanha para dobrar sua área de controle durante uma rodada.'},
+      {name:'Leitura de Runas', desc:'Identifique qualquer magia em linha de visão lendo suas runas. Sente a tradição e a lista da magia.'},
+      {name:'Sensibilidade Mágica', desc:'Detecte automaticamente magias lançadas a 15m por ponto de ARC. Sente focalizadores próximos.'},
+    ]
+  },
+  habilidoso: {
+    name: 'Habilidoso',
+    sub: 'Ágil e Astuto',
+    icon: '⚡',
+    desc: 'Extremamente rápido, ágil e habilidoso. Confia na astúcia e na sorte tanto quanto nas armas.',
+    rule: 'Ao atacar em sua fase de ativação, ganha 1 ataque adicional nesse turno.',
+    careers_magic: false,
+    benefits: [
+      {name:'Ágil', desc:'Dedos ágeis e mãos firmes. Testes de AGI são ampliados (role 3 dados, use os 2 maiores).'},
+      {name:'Ambidestro', desc:'Não sofre penalidade no ataque com segunda arma ao usar Combater com Duas Armas.'},
+      {name:'Atenção Sobrenatural', desc:'Testes de Iniciativa ampliados. Inimigos nunca ganham bônus por atacar pelas costas contra você.'},
+      {name:'Cauteloso', desc:'Ao ser derrubado, mova-se até 4m imediatamente e se levante sem gastar movimento ou ação.'},
+      {name:'Façanha: Audaz', desc:'Gaste 1 façanha: ataque todos os inimigos no seu alcance e linha de visão com arma de mão.'},
+      {name:'Façanha: Desarme', desc:'Gaste 1 façanha ao acertar: derrube a arma do inimigo no chão em vez de causar dano.'},
+      {name:'Façanha: Golpe de Misericórdia', desc:'Gaste 1 façanha ao nocautear: o alvo morre imediatamente em vez de ficar inconsciente.'},
+      {name:'Façanha: Passo Lateral', desc:'Gaste 1 façanha ao acertar corpo-a-corpo: mova-se até 2m sem provocar ataques livres.'},
+      {name:'Furtivo', desc:'Mova-se à velocidade normal sem penalidade em testes de Esgueirar-se.'},
+      {name:'Mira Aguçada', desc:'Ataques à distância ignoram penalidade de –2 por obstrução parcial de cobertura.'},
+    ]
+  },
+  intelectual: {
+    name: 'Intelectual',
+    sub: 'Tático e Genial',
+    icon: '◆',
+    desc: 'Capaz de verdadeiros surtos de genialidade. Pensador sofisticado que antecipa o curso das ações dos outros.',
+    rule: '+1 ataque e dano para você e aliados no alcance de comando que ouvem suas ordens (não cumulativo).',
+    careers_magic: false,
+    benefits: [
+      {name:'Coordenação em Campo de Batalha', desc:'Aliados no seu alcance de comando não sofrem penalidade ao atacar alvos engajados e não atingem aliados ao errar.'},
+      {name:'Façanha: Guerra Não Convencional', desc:'Gaste 1 façanha: use o ambiente como arma (empurrar ao fogo, queda de altura, etc.). Mestre determina o efeito.'},
+      {name:'Façanha: Pensamento Rápido', desc:'Gaste 1 façanha uma vez por rodada: faça um ataque ou ação rápida no início do turno de outro personagem.'},
+      {name:'Façanha: Plano de Ação', desc:'Gaste 1 façanha no início do combate: você e aliados que seguirem o plano ganham +2 Iniciativa e +2 ataque na 1ª rodada.'},
+      {name:'Façanha: Plano Perfeito', desc:'Gaste 1 façanha e faça pesquisa detalhada para criar um plano. Quem segue o plano rola dado extra nos testes relacionados.'},
+      {name:'Homem de Confiança', desc:'Aliados podem gastar seus pontos de façanha para usar suas habilidades de Façanha do arquétipo Intelectual.'},
+      {name:'Improvisador', desc:'Uma vez por cena, improvise um item ou ferramenta improvisada de materiais disponíveis ao redor.'},
+      {name:'Inspirar', desc:'Uma vez por encontro, inspire um aliado: ele pode rerrolar um teste ou jogada de dado (use o novo resultado).'},
+      {name:'Liderança', desc:'Expanda seu alcance de comando em 2m e ganha +1 em testes de Comandar.'},
+      {name:'Mentor', desc:'Durante o descanso, instrua 1 aliado: ele ganha +1 no próximo teste de uma perícia que você tenha em nível superior.'},
+    ]
+  },
+  poderoso: {
+    name: 'Poderoso',
+    sub: 'Força e Resistência',
+    icon: '⬛',
+    desc: 'Força e resistência que desafiam os limites físicos. Um baluarte no campo de batalha.',
+    rule: 'Reduz todo dano sofrido em 1 ponto (mínimo 1).',
+    careers_magic: false,
+    benefits: [
+      {name:'Berserker', desc:'Quando for ferido em combate, pode entrar em fúria: +2 FOR e MAE, –2 DEF até o fim do encontro.'},
+      {name:'Durão', desc:'Seu limiar de nocaute aumenta em 2. Você resiste mais antes de desmaiar.'},
+      {name:'Façanha: Brutamontes', desc:'Gaste 1 façanha ao empurrar ou derrubar: mova o alvo até 2m a mais do normal.'},
+      {name:'Façanha: Derrubar', desc:'Gaste 1 façanha ao acertar: o alvo é derrubado sem precisar rolar o dano.'},
+      {name:'Façanha: Força Total', desc:'Gaste 1 façanha: role o dano duas vezes e use o maior resultado.'},
+      {name:'Façanha: Investida Furiosa', desc:'Gaste 1 façanha: faça uma investida que ignora o limite de VEL — avance o dobro da velocidade.'},
+      {name:'Façanha: Revitalizar', desc:'Gaste 1 façanha: recupere FIS/2 (arred. pra cima) pontos de vida imediatamente.'},
+      {name:'Implacável', desc:'Quando nocauteado, faça um teste de FIS ND 14. Se passar, permaneça consciente com 1 ponto de vida.'},
+      {name:'Resistência (tipo)', desc:'Escolha um tipo de dano (fogo, frio, eletricidade, corrosão): reduza esse dano em 2 adicionais.'},
+      {name:'Vigor', desc:'Seu máximo de FIS aumenta em 1. Esse bônus é aplicado a cada limite de nível (Herói, Vet., Épico).'},
+    ]
+  },
+};
+
+const CAREERS = [
+  {id:'alquimista', name:'Alquimista', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Mestre da ciência arcana de refinar e combinar ingredientes para criar granadas, pomadas e compostos poderosos.',
+   role:'Suporte de combate e criação de itens.',
+   start_skills:['Granadeiro','Resistência a Veneno'],
+   start_mil:['Arma de Arremesso 1','Arma de Mão 1'],
+   start_prof:['Alquimia 1','Medicina 1'],
+   all_skills:['Alquimista de Campo','Bombardeiro','Estilo Livre','Fogo no Buraco!','Granadeiro','Mestre das Infusões','Preparação Rápida','Resistência a Veneno'],
+   all_mil:['Arma de Arremesso 4','Arma de Mão 2','Combate Desarmado 2'],
+   all_prof:['Alquimia 4','Falsificar 2','Medicina 4','Negociação 4','Ofício 4','Pesquisar 4'],
+   connections:['Ordem Alquímica'],
+   gold:50, equipment:'Avental, máscara de gás, kit viajante, 5 granadas alquímicas, bandoleira.',
+   spells:[]},
+
+  {id:'arauto', name:'Arauto da Matança', req_race:'trolloide', req_arch:null, only_initial:false, magic:false,
+   desc:'Trolloide descendente do lendário Bragg. Eleva sua voz em canções de guerra que devastam inimigos e inspiram aliados.',
+   role:'Atacante sônico e suporte de grupo trolloide.',
+   start_skills:['Brado: Chamado','Brado: Rajada Sônica'],
+   start_mil:['Arma de Mão 1 ou Arma Grande 1'],
+   start_prof:['Brado de Matança 2','Comandar 1','Conhecimento (trolloide) 1','Oratória 1'],
+   all_skills:['Brado: Balada Heroica','Brado: Cacofonia','Brado: Chamado','Brado: Chamado do Desafio','Brado: Rajada Sônica','Brado: Reverberação','Brado: Tremor','Legado de Bragg','Líder Natural','Plano de Batalha: Chamado para Ação'],
+   all_mil:['Arma de Arremesso 3','Arma de Mão 3','Arma Grande 3','Combate Desarmado 3'],
+   all_prof:['Brado de Matança 4','Comandar 4','Oratória 4','Seduzir 2'],
+   connections:['Kriel'],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'arcanista', name:'Arcanista', req_race:null, req_arch:'dotado', only_initial:false, magic:true,
+   desc:'Adepto arcano que manifesta magia através de fórmulas místicas precisas. Estudou com um mestre ou refinou seus poderes por conta própria.',
+   role:'Controle e dano mágico versátil.',
+   start_skills:['Poder Maior','Leitura de Runas (especial)'],
+   start_mil:[],
+   start_prof:['Conhecimento (arcano) 1','Pesquisar 1'],
+   all_skills:['Acadêmico Arcano','Defesas Arcanas','Educação Universitária','Poder Maior'],
+   all_mil:[],
+   all_prof:['Etiqueta 2','Negociação 2','Ofício 2','Oratória 2','Pesquisar 4'],
+   connections:['Ordem Mágica'],
+   gold:75, equipment:'—',
+   spells_start:['Aura de Proteção','Luz nas Trevas','Raio Arcano'],
+   spells:['CST 1: Acender Fogo, Golpe Arcano, Influência, Jogado pela Tempestade, Lâmina Guiada, Luz nas Trevas, Nevasca, Proteção (4 tipos)','CST 2: Aura de Proteção, Celeridade, Chamas Imensas, Contenção Gélida, Mão do Destino, Muralha de Pedra, Nuvem de Cinzas, Ocultamento, Proteção de Banimento, Raio Arcano, Rajada de Vento, Telecinesia, Trincheira Individual, Visão, Visão Verdadeira','CST 3: Bruma de Guerra, Campo de Força, Fenda, Filamentos Elétricos, Martelo de Pedra, Miragem, Rajada Mística, Terreno Inóspito, Zéfiro','CST 4: Martelo de Força, Mente Superior, Tormenta']},
+
+  {id:'aristocrata', name:'Aristocrata', req_race:'humano', req_arch:null, only_initial:true, magic:false,
+   desc:'Descendente de uma das principais casas dos Reinos de Ferro. Acesso a recursos, conexões políticas e treinamento refinado.',
+   role:'Suporte social e liderança política.',
+   start_skills:['Boa Criação','Privilégio'],
+   start_mil:['Arma de Mão 1'],
+   start_prof:['Etiqueta 2','Negociação 1','Oratória 1'],
+   all_skills:['Boa Criação','Capacitar','Conselheiro','Defensor','Educação Universitária','Guarda-Costas','Líder Natural','Privilégio'],
+   all_mil:['Arma de Mão 3','Pistola 2'],
+   all_prof:['Direito 4','Etiqueta 4','Negociação 4','Oratória 4','Pesquisar 4','Seduzir 4'],
+   connections:['Casa Nobre','Igreja (Morrow ou Menoth)'],
+   gold:200, equipment:'Roupas de alta qualidade, documentos de identidade.',
+   spells:[]},
+
+  {id:'assassino', name:'Assassino', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Matador profissional especializado no sigilo, na infiltração e em eliminar alvos de forma rápida e eficiente.',
+   role:'Eliminação furtiva e combate de precisão.',
+   start_skills:['Espreitar','Precisão Anatômica','Punhalada pelas Costas'],
+   start_mil:['Arma de Mão 1','Arma de Arremesso 1 ou Besta 1 ou Combate Desarmado 1'],
+   start_prof:['Esgueirar-se 1','Intimidar 1','Manha 1'],
+   all_skills:['Ataque em Sequência: Sangrar','Ataque Surpresa','Camuflagem','Combater com Duas Armas','Especialização (lâmina)','Espreitar','Idioma (Língua dos Cinco)','Precisão Anatômica','Punhalada pelas Costas','Sanguinário','Saque Rápido'],
+   all_mil:['Arma de Arremesso 3','Arma de Mão 4','Besta 2','Combate Desarmado 3'],
+   all_prof:['Esgueirar-se 4','Interrogatório 2','Manha 4'],
+   connections:['Submundo'],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'cacador_magos', name:'Caçador de Magos', req_race:'iosano', req_arch:null, only_initial:false, magic:false,
+   desc:'Elfo iosano especializado em localizar e neutralizar usuários de magia. Uma das carreiras mais temidas nos Reinos de Ferro.',
+   role:'Anti-mago e combatente especializado.',
+   start_skills:['Assassino de Magos','Defesas Arcanas'],
+   start_mil:['Arma de Mão 1','Arco 2'],
+   start_prof:['Furtividade 1','Sobrevivência 1'],
+   all_skills:['Assassino de Magos','Assassino Arcano','Defesas Arcanas','Dissipar','Espreitar','Lutador Noturno','Precisão Anatômica','Rastro sem Pegadas'],
+   all_mil:['Arco 4','Arma de Mão 3','Combate Desarmado 2'],
+   all_prof:['Detectar 4','Esgueirar-se 4','Sobrevivência 3'],
+   connections:['Retribuição de Scyrah'],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'cacador_recomp', name:'Caçador de Recompensas', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Rastreia e captura (ou elimina) alvos para pagar a recompensa. Especialista em prisão, rastreamento e intimidação.',
+   role:'Rastreador e caçador de alvos.',
+   start_skills:['Imobilizar','Retentor'],
+   start_mil:['Arma de Mão 1 e 1 outra à escolha'],
+   start_prof:['Detectar 1','Intimidar 1','Rastrear 1','Usar Cordas 1'],
+   all_skills:['Absorver Impacto','Ataque Surpresa','Besteiro','Cabeçada','Imobilizar','Idioma (Língua dos Cinco)','Perseguir','Retentor'],
+   all_mil:['Arma de Mão 3','Besta 2','Combate Desarmado 4','Fuzil 3','Pistola 2'],
+   all_prof:['Direito 2','Disfarce 2','Enganar 2','Esgueirar-se 3','Interrogatório 2','Manha 4','Negociação 4','Rastrear 4','Subornar 2'],
+   connections:[],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'cavaleiro', name:'Cavaleiro', req_race:'humano_iosano', req_arch:null, only_initial:false, magic:false,
+   desc:'Guerreiro montado e honrado, treinado em uma ordem de cavalaria. Especialista em combate montado e uso de escudo.',
+   role:'Combatente de linha de frente e protetor.',
+   start_skills:['Defensor','Trespassar'],
+   start_mil:['Arma de Mão 1','Arma Grande 1','Escudo 1'],
+   start_prof:['Comandar 1','Conhecimento (ordem) 1','Etiqueta 1'],
+   all_skills:['Ataque Montado','Ataque Preciso','Defensor','Forçar o Ataque','Ginete de Combate','Ginete Especialista','Golpe com Escudo','Investida de Cavalaria','Investida Implacável','Líder Natural','Linha Defensiva','Suportar Carga','Trespassar','Vontade de Ferro'],
+   all_mil:['Arma de Mão 4','Arma Grande 4','Combate Desarmado 3','Escudo 4','Lança 4'],
+   all_prof:['Comandar 4','Direito 2','Etiqueta 2'],
+   connections:['Ordem de Cavalaria'],
+   gold:100, equipment:'—',
+   spells:[]},
+
+  {id:'conj_guerra', name:'Conjurador de Guerra', req_race:null, req_arch:'dotado', only_initial:true, magic:true,
+   desc:'Tradição focalizador. Controla gigantes-a-vapor através de um vínculo arcano, canalizando foco para manobras e ataques.',
+   role:'Comando de gigantes-a-vapor (warjacks).',
+   start_skills:['Vínculo'],
+   start_mil:['Arma de Mão 1','Pistola 1'],
+   start_prof:['Comandar 1','Detectar 1'],
+   all_skills:['Ás Comandante','Controlador de Gigantes','Manobra: Ataque','Manobra: Ataque Auxiliar','Manobra: De Imediato','Manobra: Qualquer Terreno','Sintonizar','Vaporeiro','Vínculo'],
+   all_mil:['Arma de Mão 3','Pistola 3'],
+   all_prof:['Comandar 4','Detectar 3','Mekânica 3'],
+   connections:['Facção Militar'],
+   gold:0, equipment:'Armadura de conj. de guerra (leve ou média) OU arma mekânica OU canhão de mão mekânico.',
+   spells_start:['Convecção','Investida Irrestrita'],
+   spells:['CST 1: Além do Limite, Aríete, Aura de Proteção, Convecção, Fortificar, Investida Irrestrita, Metal Temperado, Raio Arcano, Refúgio, Tocaia, Transferência, Trincheira Individual','CST 2: Ataque de Retribuição, Golpe Arcano, Impulsionar','CST 3: À Prova de Falhas, Agressão de Ferro, Consciência, Disparo Guiado, Fechar as Escotilhas, Eliminador, Fenda, Rangido, Superioridade','CST 4: Maré de Aço, Martelo de Força, Obliteração']},
+
+  {id:'duelista', name:'Duelista', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Espadachim refinado, especialista no duelo formal e no combate um a um. Misto de pistola e lâmina.',
+   role:'Combatente de precisão e contraataque.',
+   start_skills:['Aparar','Contragolpe'],
+   start_mil:['Arma de Mão 1','Pistola 1'],
+   start_prof:['Intimidar 1','Jogatina 1','Saltar 1'],
+   all_skills:['Absorver Impacto','Acrobático','Aparar','Ataque Preciso','Atirador','Combater com Duas Armas','Contragolpe','Saque Rápido','Trabalho Rápido'],
+   all_mil:['Arma de Arremesso 3','Arma de Mão 4','Combate Desarmado 2','Pistola 4'],
+   all_prof:['Direito 2','Etiqueta 2','Manha 2','Oratória 2','Seduzir 3'],
+   connections:[],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'espiao', name:'Espião', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Agente de inteligência especializado em infiltração, coleta de informações e eliminação discreta.',
+   role:'Infiltração, informação e ação encoberta.',
+   start_skills:['Identidade Falsa','Idioma (1 à escolha)','Plano de Batalha: Sombra'],
+   start_mil:['1 entre Arma de Arremesso 1, Arma de Mão 1 ou Pistola 1'],
+   start_prof:['Comandar 1','Detectar 1','Disfarce 1','Enganar 1','Esgueirar-se 1'],
+   all_skills:['Ataque Surpresa','Detectar Mentiras','Espreitar','Identidade Falsa','Idioma','Linguagem de Sinais','Plano de Batalha: Sombra','Resistência a Veneno','Vontade de Ferro'],
+   all_mil:['Arma de Arremesso 3','Arma de Mão 3','Combate Desarmado 3','Pistola 3'],
+   all_prof:['Disfarce 4','Enganar 4','Esgueirar-se 4','Interrogatório 4','Manha 4'],
+   connections:['Rede de Inteligência'],
+   gold:100, equipment:'Documentos de identidade falsos.',
+   spells:[]},
+
+  {id:'explorador', name:'Explorador', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Desbravador que mapeia territórios inexplorados. Recebe subsídio de patronos ricos por relatórios e descobertas.',
+   role:'Exploração, sobrevivência e guia.',
+   start_skills:['Caçador de Feras','Idioma (qualquer)','Porto de Escala'],
+   start_mil:['1 entre Arco 1, Arma de Mão 1, Fuzil 1 ou Pistola 1'],
+   start_prof:['Detectar 1','Medicina 1','Senso de Direção 1','Sobrevivência 1'],
+   all_skills:['Caçador de Feras','Ginete Especialista','Ginete Veloz','Idioma','Líder Natural','Linguagem de Sinais','Plano de Batalha: Reconhecimento','Porto de Escala'],
+   all_mil:['Arco 4','Arma de Mão 3','Fuzil 3','Pistola 3'],
+   all_prof:['Detectar 4','Medicina 3','Navegação 4','Rastrear 4','Senso de Direção 4','Sobrevivência 4'],
+   connections:['Patronos Ricos'],
+   gold:150, equipment:'Porta-mapas, lupa. +25 CO/mês do patrono.',
+   spells:[]},
+
+  {id:'feiticeiro', name:'Feiticeiro', req_race:null, req_arch:'dotado', only_initial:true, magic:true,
+   desc:'Usuário de magia elemental inata. Escolha um elemento: Fogo, Gelo, Pedra ou Tempestade. Esse elemento molda toda a sua magia.',
+   role:'Especialista em dano e controle elemental.',
+   start_skills:['Imunidade: Fogo (se Fogo) / Imunidade: Frio (se Gelo)'],
+   start_mil:['1 entre Arco 1, Arma de Mão 1, Fuzil 1 ou Pistola 1'],
+   start_prof:['Conhecimento (elemento) 1','Pesquisar 1'],
+   all_skills:['Imunidade: Fogo','Imunidade: Frio','Maestria Elemental','Poder Maior'],
+   all_mil:['Arco 3','Arma de Mão 3','Fuzil 3','Pistola 3'],
+   all_prof:['Conhecimento (elemento) 4','Pesquisar 4','Sobrevivência 3'],
+   connections:['Círculo de Feiticeiros'],
+   gold:50, equipment:'—',
+   spells_start:['Fogo: Acender Fogo, Chamas Imensas, Muralha de Fogo | Gelo: Esfriar, Nevasca, Raio de Gelo | Pedra: Aríete, Postura de Pedra, Terreno Sólido | Tempestade: Jogado pela Tempestade, Rajada de Vento, Vento Cortante'],
+   spells:['FOGO — CST1: Acender Fogo, Chamas da Fúria, Proteção contra Fogo | CST2: Chamas Imensas, Extintor, Ignição, Imolação, Muralha de Fogo, Nuvem de Cinzas | CST3: Atiçar as Chamas, Barreira de Chamas, Fogo Purificador, Inferno, Labareda | CST4: Cinzas às Cinzas, Efígie Flamejante, Mar de Fogo','GELO — CST1: Escudo de Gelo, Nevasca, Proteção contra Frio | CST2: Calafrio, Contenção Gélida, Mão Perene do Inverno, Queimadura de Frio, Raio de Gelo, Tempestade Destruidora | CST3: Congelamento Profundo, Geada, Gelo Frágil, Tempestade Invernal, Terreno Congelado | CST4: Apresamento Gélido, Névoa Cerrada, Névoa Gélida','PEDRA — CST1: Berço da Terra, Constrição, Postura de Pedra | CST2: Aríete, Força da Pedra, Fortificar, Muralha de Pedra, Terreno Sólido, Trincheira Individual | CST3: Fenda, Fissura, Martelo de Pedra, Terremoto, Terreno Inóspito | CST4: Estilhaçar Terra, Obliteração, Onda de Choque','TEMPESTADE — CST1: Bons Ventos, Jogado pela Tempestade, Pancada de Vento | CST2: Asas de Ar, Celeridade, Investida Irrestrita, Rajada de Vento, Telecinesia, Vento Cortante | CST3: Bruma de Guerra, Corrente de Relâmpagos, Desaceleração, Filamentos Elétricos, Zéfiro | CST4: Tormenta, Tornado, Ventos Furiosos']},
+
+  {id:'fuzileiro', name:'Fuzileiro', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Atirador especialista em fuzis e carabinas. Prefere posições elevadas e tiro de longo alcance.',
+   role:'Atirador de longo alcance.',
+   start_skills:['Atirador de Elite','Exímio Atirador','Tiro Duplo'],
+   start_mil:['Fuzil 1'],
+   start_prof:['Detectar 1','Escalar 1','Sobrevivência 1'],
+   all_skills:['Atirador de Elite','Caçador Veloz','Disparo Montado','Exímio Atirador','Franco Atirador','Lutador Noturno','Mira Aprimorada','Recarga Rápida','Retornar Fogo','Tiro Duplo'],
+   all_mil:['Fuzil 4'],
+   all_prof:['Ofício (armas de fogo) 4','Sobrevivência 3'],
+   connections:[],
+   gold:50, equipment:'Bandoleira de munição + fuzil pesado ou fuzil longo de repetição (10 tiros).',
+   spells:[]},
+
+  {id:'homem_armas', name:'Homem de Armas', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Guerreiro altamente qualificado que equilibra defesa impenetrável com ataque devastador. Mestre do escudo.',
+   role:'Tanque e protetor de linha de frente.',
+   start_skills:['Linha Defensiva','Proteção de Escudo'],
+   start_mil:['Arma Grande 1','Escudo 1','Arma de Mão 1 ou Pistola 1'],
+   start_prof:['Comandar 1','Detectar 1'],
+   all_skills:['Especialização (Alabarda)','Especialização (Lança)','Guarda-Costas','Golpe com Escudo','Golpe de Retaliação','Linha Defensiva','Preparar Defesa','Proteção de Escudo','Protegido','Suportar Carga','Trespassar','Vontade de Ferro'],
+   all_mil:['Arma de Mão 3','Arma Grande 4','Combate Desarmado 3','Escudo 4','Pistola 3'],
+   all_prof:['Comandar 3','Ofício (metalurgia) 4'],
+   connections:[],
+   gold:100, equipment:'—',
+   spells:[]},
+
+  {id:'investigador', name:'Investigador', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Detetive e analista forense. Ganha o benefício Superpercepção do arquétipo Intelectual ao ser escolhido inicialmente.',
+   role:'Coleta de informações e investigação.',
+   start_skills:['Astuto','Idioma (qualquer)'],
+   start_mil:['Arma de Mão 1 ou Pistola 1'],
+   start_prof:['Ciência Forense 1','Detectar 1','Esgueirar-se 1','Interrogatório 1','Medicina 1'],
+   all_skills:['Astuto','Detectar Mentiras','Espreitar','Idioma','Linguagem de Sinais','Precisão Anatômica','Vontade de Ferro'],
+   all_mil:['Arma de Mão 2','Combate Desarmado 2','Pistola 2'],
+   all_prof:['Ciência Forense 4','Detectar 4','Direito 4','Enganar 4','Esgueirar-se 4','Interrogatório 4','Medicina 4','Pesquisar 4'],
+   connections:['Repartição de Investigação'],
+   gold:100, equipment:'—',
+   spells:[]},
+
+  {id:'ladrao', name:'Ladrão', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Especialista em furtos, arrombamentos e vida nas sombras do submundo.',
+   role:'Furtividade, habilidade social e combate oportunista.',
+   start_skills:['Enganador','Esquivo'],
+   start_mil:['Arma de Arremesso 1','Arma de Mão 1'],
+   start_prof:['Arrombar 2','Arte da Fuga 1','Enganar 1','Esgueirar-se 1','Manha 1','Punga 2','Subornar 1'],
+   all_skills:['Aparar','Avaliação','Camuflagem','Carteador','Enganador','Escapar','Espreitar','Esquivo','Idioma (Língua dos Cinco)','Pés Ligeiros','Rastro sem Pegadas'],
+   all_mil:['Arma de Arremesso 3','Arma de Mão 3','Combate Desarmado 2','Pistola 2'],
+   all_prof:['Arrombar 4','Arte da Fuga 4','Direito 2','Disfarce 4','Enganar 4','Esgueirar-se 4','Falsificar 4','Manha 4','Negociação 4','Punga 4','Subornar 4'],
+   connections:['Submundo'],
+   gold:75, equipment:'Ferramentas de ladrão.',
+   spells:[]},
+
+  {id:'lamina_temp', name:'Lâmina Tempestuosa', req_race:'humano_cygnarano', req_arch:null, only_initial:true, magic:false,
+   desc:'Elite de Cygnar que une magia e esgrima. Inscreve runas em sua lâmina para potencializar ataques.',
+   role:'Combatente mágico-marcial de Cygnar.',
+   start_skills:['Magia das Sombras','Precisão Arcana'],
+   start_mil:['Arma de Mão 2'],
+   start_prof:['Arcanismo 1'],
+   all_skills:['Magia das Sombras','Precisão Arcana','Assassino Arcano','Combater com Duas Armas'],
+   all_mil:['Arma de Mão 4','Combate Desarmado 3','Pistola 2'],
+   all_prof:['Arcanismo 4','Detectar 3'],
+   connections:['Exército de Cygnar'],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'mago_pistoleiro', name:'Mago-Pistoleiro', req_race:null, req_arch:'dotado', only_initial:false, magic:true,
+   desc:'Une pistola e magia arcana. Cada tiro pode ser imbuído com um tipo diferente de magia de tiro arcano.',
+   role:'Atirador arcano de média distância.',
+   start_skills:['Fabricar Bala Rúnica','Recarga Rápida'],
+   start_mil:['Fuzil 1 ou Pistola 1'],
+   start_prof:['Detectar 1','Intimidar 1'],
+   all_skills:['Atirador','Fabricar Bala Rúnica','Mira Aguçada','Precisão Arcana','Recarga Rápida','Saque Rápido'],
+   all_mil:['Fuzil 4','Pistola 4'],
+   all_prof:['Seduzir 2'],
+   connections:[],
+   gold:25, equipment:'Bandoleira, pistola ou fuzil arcano (10 cargas), kit de fabricação de bala rúnica.',
+   spells_start:['Tiro Arcano: Brutal','Tiro Arcano: Preciso','Tiro Arcano: Trovão'],
+   spells:['CST1: Ataque de Retribuição, Tiro Arcano: Preciso, Na Mosca, Brutal, Degradar Ferro, Tiro Fundido, Silenciador, Combustão Espontânea, Trovão','CST2: Grupo de Disparo, Reflexos Ampliados, Refúgio, Tiro Arcano: Farol de Fogo, Disparo Sombrio, Tiro de Efeito, Tocaia, Visão Verdadeira','CST3: Disparo Guiado, Tiro Arcano: Explosão, Tremor de Terra, Caçador Fantasma, Disruptor Mágico','CST4: Tiro Arcano: Tiro Congelante, Impacto Vital, Impulso']},
+
+  {id:'mecanico_arcano', name:'Mekânico Arcano', req_race:null, req_arch:'dotado', only_initial:false, magic:true,
+   desc:'Engenheiro que une magia e mekânica. Inscreve runas em armas e armaduras e usa magia para reparar gigantes.',
+   role:'Engenharia mágica e suporte a gigantes.',
+   start_skills:['Inscrever Fórmulas'],
+   start_mil:['Arma de Mão 1 ou Fuzil 1'],
+   start_prof:['Engenharia Mekânica 1','Ofício (armas de fogo) 1','Ofício (metalurgia) 1'],
+   all_skills:['Ás Comandante','Controlador de Gigantes','Engenheiro Arcano','Engenhoso','Manobra: Ataque','Manobra: De Imediato','Inscrever Fórmulas','Vaporeiro'],
+   all_mil:['Arma de Mão 3','Fuzil 3'],
+   all_prof:['Engenharia Mekânica 4','Ofício (armas) 4','Ofício (metalurgia) 4','Pesquisar 3'],
+   connections:['Corporação Mekânica'],
+   gold:50, equipment:'Kit de entalhe de runas + arma/armadura mekânica de até 750 CO.',
+   spells_start:['Escudo de Polaridade','Raio Arcântriko'],
+   spells:['CST1: Amplificador de Energia, Ataque de Retribuição, Curto Circuito, Impulsionar, Locomoção, Martelo Gigante, Proteção contra Eletricidade','CST2: Além do Limite, Carga Positiva, Eletrificar, Escudo de Polaridade, Fortificar, Metal Temperado, Raio Arcântriko, Refúgio','CST3: A Todo Vapor, À Prova de Falhas, Agressão de Ferro, Bando de Artilharia, Campo de Força, Disparo Guiado, Rangido, Rajada Elétrica, Superioridade','CST4: Blecaute, Maré de Aço, Tranca Voltaica']},
+
+  {id:'mecanico_campo', name:'Mekânico de Campo', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Técnico especializado no reparo e operação de gigantes-a-vapor em pleno campo de batalha.',
+   role:'Suporte técnico e controle de gigantes.',
+   start_skills:['Controlador de Gigantes','Pro Chão!','Remendão'],
+   start_mil:['Arma de Mão 1 ou Pistola 1'],
+   start_prof:['Comandar 1','Engenharia Mekânica 1','Ofício (metalurgia) 1'],
+   all_skills:['Ás Comandante','Controlador de Gigantes','Esquivo','Manobra: Ataque','Manobra: Ataque Auxiliar','Manobra: De Imediato','Manobra: Qualquer Terreno','Obter Peças','Pro Chão!','Remendão','Sentinela de Ferro','Sintonizar','Vaporeiro'],
+   all_mil:['Arma de Mão 2','Pistola 2'],
+   all_prof:['Comandar 3','Engenharia Mekânica 4','Ofício (metalurgia) 4'],
+   connections:['Organização de Mekânicos'],
+   gold:25, equipment:'Kit de ferramentas de mekânico + gigante-de-trabalho leve (200 CO em armas).',
+   spells:[]},
+
+  {id:'oficial', name:'Oficial Militar', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Comandante tático experiente que lidera tropas em campo. Especialista em planos de batalha e coordenação.',
+   role:'Liderança e suporte tático.',
+   start_skills:['Líder de Equipe','Líder Natural','Plano de Batalha: Chamado para Ação'],
+   start_mil:['Arma de Mão 1','Arma Grande 1 ou Pistola 1'],
+   start_prof:['Comandar 1','Medicina 1','Navegação 1'],
+   all_skills:['Ás Comandante','Ataque Montado','Boa Criação','Comandante de Batalha','Controlador de Gigantes','Defensor','Disparo Montado','Ginete Especialista','Manobra: Ataque','Manobra: De Imediato','Investida de Cavalaria','Líder de Equipe','Líder Natural','Linguagem de Sinais','Plano de Batalha (todos)'],
+   all_mil:['Arma de Mão 3','Arma Grande 3','Pistola 3'],
+   all_prof:['Comandar 4','Direito 3','Medicina 3','Negociação 3','Navegação 4','Oratória 4'],
+   connections:['Exército'],
+   gold:100, equipment:'Uniforme de oficial.',
+   spells:[]},
+
+  {id:'patrulheiro', name:'Patrulheiro', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Guardião de fronteiras, estradas e territórios selvagens. Mestre em emboscadas, rastreamento e furtividade.',
+   role:'Reconhecimento e combate de fronteira.',
+   start_skills:['Camuflagem','Desbravador'],
+   start_mil:['Arma de Mão 1','1 entre Arco 1, Besta 1, Fuzil 1, Pistola 1'],
+   start_prof:['Detectar 1','Esgueirar-se 1','Rastrear 1','Sobrevivência 1'],
+   all_skills:['Caçador Veloz','Camuflagem','Cavalaria Ligeira','Desbravador','Disparo Montado','Espreitar','Ginete Veloz','Linguagem de Sinais','Lutador Noturno','Plano de Batalha: Abaixar-se','Plano de Batalha: Reconhecimento','Plano de Batalha: Sombra','Recarga Rápida','Rastro sem Pegadas','Resistência a Doenças'],
+   all_mil:['Arco 4','Arma de Arremesso 4','Arma de Mão 2','Besta 3','Fuzil 3','Pistola 3'],
+   all_prof:['Detectar 4','Esgueirar-se 4','Rastrear 4','Sobrevivência 4'],
+   connections:[],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'pirata', name:'Pirata', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Navegante e saqueador dos mares de Caen. Especialista em combate em conveses e manobras de abordagem.',
+   role:'Combatente versátil e marinheiro.',
+   start_skills:['Especialização (alfange)','Estável','Gangue'],
+   start_mil:['Arma de Mão 1','Arma de Arremesso 1 ou Pistola 1'],
+   start_prof:['Escalar 1','Intimidar 1','Nadar 1','Marinhagem 1'],
+   all_skills:['Ataque Surpresa','Atirador','Cabeçada','Especialização (alfange)','Estável','Gangue','Idiomas','Otário!','Porto de Escala','Resistência a Doenças','Retentor','Trabalho Rápido'],
+   all_mil:['Arma de Arremesso 3','Arma de Mão 3','Artilharia Leve 2','Combate Desarmado 3','Fuzil 2','Pistola 3'],
+   all_prof:['Comandar 2','Enganar 3','Navegação 4','Marinhagem 4','Negociação 3'],
+   connections:['Submundo Marítimo'],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'pistoleiro_c', name:'Pistoleiro', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Artilheiro rápido especializado em pistolas. Mestre no saque rápido e no combate de curta a média distância.',
+   role:'Atirador rápido de curto-médio alcance.',
+   start_skills:['Atirador','Saque Rápido'],
+   start_mil:['Pistola 2'],
+   start_prof:['Intimidar 1'],
+   all_skills:['Atirador','Ataque em Sequência: Prender','Combater com Duas Armas','Disparo Montado','Mira Aguçada','Recarga Rápida','Retornar Fogo','Saque Rápido','Tiro Próximo'],
+   all_mil:['Arma de Mão 2','Combate Desarmado 2','Pistola 4'],
+   all_prof:['Intimidar 3','Manha 3'],
+   connections:[],
+   gold:50, equipment:'—',
+   spells:[]},
+
+  {id:'presa_ferro', name:'Presa de Ferro', req_race:'humano_khadorano', req_arch:null, only_initial:true, magic:false,
+   desc:'Elite das forças de Khador. Guerreiros brutais que empunham dois machados, especializados em combate agressivo.',
+   role:'Atacante corpo-a-corpo agressivo de Khador.',
+   start_skills:['Combater com Duas Armas','Forçar o Ataque'],
+   start_mil:['Arma de Mão 2','Arma Grande 1'],
+   start_prof:['Intimidar 1'],
+   all_skills:['Ataque em Sequência: Sangrar','Combater com Duas Armas','Especialização (machado)','Forçar o Ataque','Grito de Guerra','Investida Implacável','Sanguinário','Vontade de Ferro'],
+   all_mil:['Arma de Mão 4','Arma Grande 3','Combate Desarmado 3'],
+   all_prof:['Comandar 3','Intimidar 4'],
+   connections:['Exército de Khador'],
+   gold:75, equipment:'—',
+   spells:[]},
+
+  {id:'sacerdote', name:'Sacerdote', req_race:'humano', req_arch:'dotado', only_initial:false, magic:true,
+   desc:'Clérigo de Morrow (cura, luz e proteção) ou Menoth (fogo, lei e purificação). Magia divina através da fé.',
+   role:'Cura e suporte (Morrow) ou fogo e controle (Menoth).',
+   start_skills:['Capacitar (Morrow) ou Dissipar (Menoth)'],
+   start_mil:['Arma de Mão 1 ou Arma Grande 1'],
+   start_prof:['Conhecimento (fé) 1','Medicina 1 (Morrow) ou Oratória 1 (Menoth)'],
+   all_skills:['Coro','Educação Universitária','Guarda-Costas','Idioma (Língua dos Deuses)','Líder Natural'],
+   all_mil:['Arma de Mão 3','Arma Grande 3'],
+   all_prof:['Conhecimento (fé) 4','Medicina 4','Oratória 4','Pesquisar 4','Teologia 4'],
+   connections:['Igreja de Morrow ou Templo Menita'],
+   gold:75, equipment:'—',
+   spells_start:['Morrow: Dádiva de Solovin, Lâmina da Radiância, Visão Verdadeira | Menoth: Ignição, Imolação, Lâmina Guiada'],
+   spells:['MORROW: CST1: Bênção da Saúde, Dádiva de Solovin, Lâmina Guiada, Luz nas Trevas | CST2: Aura de Proteção, Bênçãos da Guerra, Escudo da Fé, Lâmina da Radiância, Mão do Destino, Olhos da Verdade, Proteção de Banimento, Triagem, Visão Verdadeira | CST3: Benção de Morrow, Bênção Sanguínea, Caminho Verdadeiro, Chamado do Cruzado, Explosão Solar, Luz do Dia, Prece da Orientação | CST4: Cura, Fogo Estelar, Força da Fé','MENOTH: CST1: Chamas da Fúria, Influência, Lâmina Guiada, Proteção contra Fogo | CST2: Chamas Justas, Hino da Batalha, Hino da Passagem, Ignição, Imolação, Muralha de Fogo, Nuvem de Cinzas, Proteção de Banimento, Visão | CST3: Caminho Verdadeiro, Chamado do Cruzado, Fissura, Fogo Purificador, Lamentação, Purificação, Rajada Mística | CST4: Cinzas às Cinzas, Efígie Flamejante, Hino da Proteção']},
+
+  {id:'salteador', name:'Salteador', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Bandido e assaltante de estradas. Especialista em emboscadas montadas e ataques rápidos.',
+   role:'Combate oportunista e emboscada.',
+   start_skills:['Disparo Montado','Emboscada'],
+   start_mil:['Arma de Mão 1','Arco 1 ou Besta 1 ou Pistola 1'],
+   start_prof:['Cavalgar 1','Detectar 1','Intimidar 1','Lidar com Animais 1'],
+   all_skills:['Ataque Montado','Ataque Surpresa','Avaliação','Caçador Veloz','Cavalaria Ligeira','Combater com Duas Armas','Disparo Montado','Emboscada','Espreitar','Ginete Especialista','Ginete Veloz','Rastro sem Pegadas','Recarga Rápida','Retentor','Saque Rápido'],
+   all_mil:['Arco 3','Arma de Mão 3','Besta 3','Combate Desarmado 3','Pistola 3'],
+   all_prof:['Cavalgar 4','Detectar 3','Intimidar 4','Lidar com Animais 3'],
+   connections:['Submundo'],
+   gold:75, equipment:'Cavalo de montaria, máscara, arreios.',
+   spells:[]},
+
+  {id:'soldado', name:'Soldado', req_race:null, req_arch:null, only_initial:false, magic:false,
+   desc:'Veterano de guerra com ampla experiência militar. A carreira mais versátil para combate.',
+   role:'Combatente versátil e adaptável.',
+   start_skills:['Encontrar Cobertura','Sentinela'],
+   start_mil:['2 entre Arma de Arremesso 1, Arma de Mão 1, Arma Grande 1, Besta 1, Fuzil 1 ou Pistola 1'],
+   start_prof:['Conduzir 1','Detectar 1','Medicina 1','Sobrevivência 1'],
+   all_skills:['Absorver Impacto','Avanço Cuidadoso','Ataque Montado','Controlador de Gigantes','Disparo Montado','Encontrar Cobertura','Granadeiro','Idioma','Investida de Cavalaria','Pro Chão!','Resistência a Doenças','Recarga Rápida','Sentinela'],
+   all_mil:['Arma de Arremesso 3','Arma de Mão 3','Arma Grande 4','Artilharia Leve 3','Besta 3','Combate Desarmado 3','Escudo 2','Fuzil 4','Pistola 3'],
+   all_prof:['Comandar 3','Esgueirar-se 2','Medicina 3','Sobrevivência 4'],
+   connections:['Exército'],
+   gold:100, equipment:'—',
+   spells:[]},
+
+  {id:'sold_trincheira', name:'Soldado de Trincheira', req_race:'humano_trolloide_ogrun', req_arch:null, only_initial:true, magic:false,
+   desc:'Elite de Cygnar especializada em assalto a posições fortificadas. Fuzil com baioneta e granadas são suas ferramentas.',
+   role:'Assalto a trincheiras e posições fortes.',
+   start_skills:['Investida de Baioneta','Pro Chão!'],
+   start_mil:['Arma de Mão 1','Fuzil 2'],
+   start_prof:['Sobrevivência 1'],
+   all_skills:['Encontrar Cobertura','Entrincheirar-se','Granadeiro','Investida de Baioneta','Pro Chão!','Resistência a Doenças','Sentinela'],
+   all_mil:['Arma de Mão 2','Combate Desarmado 2','Fuzil 4'],
+   all_prof:['Detectar 3','Medicina 2','Sobrevivência 4'],
+   connections:['Exército de Cygnar'],
+   gold:75, equipment:'—',
+   spells:[]},
+];
+
+// ========== STATE ==========
+let state = {
+  step: 0,
+  race: null,
+  arch: null,
+  careers: [],
+  benefit: null,
+};
+
+// ========== RENDER FUNCTIONS ==========
+
+function renderRaces() {
+  const grid = document.getElementById('race-grid');
+  grid.innerHTML = '';
+  Object.entries(RACES).forEach(([id, r]) => {
+    const div = document.createElement('div');
+    div.className = 'card' + (state.race === id ? ' selected' : '');
+    div.onclick = () => selectRace(id);
+    div.innerHTML = `
+      <div class="card-name">${r.name}</div>
+      <div class="card-sub">${r.sub}</div>
+      <div class="card-desc">${r.desc}</div>
+      <div class="card-tags">
+        ${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+      ${state.race === id ? `
+      <div style="margin-top:12px; border-top:1px solid rgba(184,146,42,0.2); padding-top:12px;">
+        <table class="stat-table">
+          <tr><th>Attr</th><th>Inicial</th><th>Herói</th><th>Vet.</th><th>Épico</th></tr>
+          ${Object.entries(r.attrs).map(([a,v]) => `<tr>
+            <td>${a}</td>
+            <td class="highlight">${v[0] === null ? '—' : v[0]}</td>
+            <td>${v[1] === null ? '—' : v[1]}</td>
+            <td>${v[2] === null ? '—' : v[2]}</td>
+            <td>${v[3] === null ? '—' : v[3]}</td>
+          </tr>`).join('')}
+        </table>
+        <div style="margin-top:10px;">
+          <div class="section-box-title">Características Especiais</div>
+          ${r.special.map(s => `<div style="font-size:13px; color:#9a9aaa; margin-bottom:4px;">• ${s}</div>`).join('')}
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:#9a9aaa;">
+          <span style="color:#B8922A;">Altura:</span> ${r.height} &nbsp;|&nbsp;
+          <span style="color:#B8922A;">Peso:</span> ${r.weight}
+        </div>
+        <div style="margin-top:4px; font-size:12px; color:#9a9aaa;">
+          <span style="color:#B8922A;">Idiomas:</span> ${r.lang}
+        </div>
+      </div>` : ''}
+    `;
+    grid.appendChild(div);
+  });
+  document.getElementById('btn-next-0').disabled = !state.race;
+}
+
+function selectRace(id) {
+  state.race = id;
+  state.arch = null;
+  state.careers = [];
+  state.benefit = null;
+  renderRaces();
+}
+
+function renderArchetypes() {
+  const grid = document.getElementById('arch-grid');
+  const race = RACES[state.race];
+  grid.innerHTML = '';
+  Object.entries(ARCHETYPES).forEach(([id, a]) => {
+    const avail = race.archs.includes(id);
+    const div = document.createElement('div');
+    div.className = 'card' + (state.arch === id ? ' selected' : '') + (!avail ? ' locked' : '');
+    if (avail) div.onclick = () => selectArch(id);
+    div.innerHTML = `
+      <div class="card-name">${a.icon} ${a.name}</div>
+      <div class="card-sub">${a.sub}</div>
+      <div class="card-desc">${a.desc}</div>
+      <div style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:3px; font-size:13px; color:#c8d8e0; font-style:italic;">
+        ⚙ ${a.rule}
+      </div>
+      ${state.arch === id ? `
+      <div style="margin-top:12px; border-top:1px solid rgba(184,146,42,0.2); padding-top:10px;">
+        <div class="section-box-title">Benefícios disponíveis</div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px;">
+          ${a.benefits.map(b => `<span class="tag gold">${b.name}</span>`).join('')}
+        </div>
+      </div>` : ''}
+    `;
+    grid.appendChild(div);
+  });
+  document.getElementById('btn-next-1').disabled = !state.arch;
+}
+
+function selectArch(id) {
+  state.arch = id;
+  state.careers = [];
+  state.benefit = null;
+  renderArchetypes();
+}
+
+function renderCareers() {
+  const grid = document.getElementById('career-grid');
+  const race = state.race;
+  const arch = state.arch;
+  const archObj = ARCHETYPES[arch];
+  grid.innerHTML = '';
+
+  // Restriction note
+  const note = document.getElementById('career-restriction-note');
+  if (arch === 'dotado') {
+    note.textContent = '✦ Arquétipo Dotado: Você pode escolher carreiras mágicas. Se escolher Conjurador de Guerra, sua tradição será Focalizador; caso contrário, será Tecelão da Vontade.';
+  } else {
+    note.textContent = `⚙ Arquétipo ${archObj.name}: Carreiras mágicas (Arcanista, Conj. de Guerra, Feiticeiro, Mago-Pistoleiro, Mek. Arcano, Sacerdote) exigem o arquétipo Dotado e estão bloqueadas.`;
+  }
+
+  CAREERS.forEach(c => {
+    let locked = false;
+    let lockReason = '';
+
+    // Race check
+    if (c.req_race) {
+      const raceReqs = c.req_race.split('_');
+      if (!raceReqs.includes(race)) { locked = true; lockReason = 'Raça incorreta'; }
+    }
+    // Arch check
+    if (c.req_arch && c.req_arch !== arch) { locked = true; lockReason = 'Arquétipo incorreto'; }
+    // Magic check
+    if (c.magic && arch !== 'dotado') { locked = true; lockReason = 'Requer Dotado'; }
+    // Only initial check (if already past initial selection context - here we treat all as initial)
+    // Already selected
+    const isSelected = state.careers.includes(c.id);
+    // If 2 selected and this isn't one of them
+    const maxed = state.careers.length >= 2 && !isSelected;
+
+    const div = document.createElement('div');
+    div.className = 'card' + (isSelected ? ' selected' : '') + (locked || maxed ? ' locked' : '');
+    if (!locked && !maxed) div.onclick = () => toggleCareer(c.id);
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:start;">
+        <div>
+          <div class="card-name">${c.name}</div>
+          <div class="card-sub">${c.magic ? '✦ Mágica' : '⚙ Não-Mágica'}${c.only_initial ? ' · Só Inicial' : ''}${c.req_race ? ' · Raça Específica' : ''}</div>
+        </div>
+        ${isSelected ? '<span class="tag gold">✓ Selecionada</span>' : ''}
+      </div>
+      <div class="card-desc">${c.desc}</div>
+      <div style="margin-top:6px; font-size:12px; color:#B8922A; font-style:italic;">${c.role}</div>
+      ${isSelected ? `
+      <div style="margin-top:12px; border-top:1px solid rgba(184,146,42,0.2); padding-top:10px; font-size:13px;">
+        <div class="section-box-title">Habilidades Iniciais</div>
+        <div class="inline-list" style="margin-bottom:8px;">
+          ${c.start_skills.map(s => `<span class="tag gold">${s}</span>`).join('')}
+        </div>
+        ${c.start_mil.length ? `<div class="section-box-title" style="margin-top:6px;">Perícias Militares Iniciais</div>
+        <div class="inline-list" style="margin-bottom:8px;">${c.start_mil.map(s=>`<span class="tag rust">${s}</span>`).join('')}</div>` : ''}
+        ${c.start_prof.length ? `<div class="section-box-title" style="margin-top:6px;">Perícias Profissionais Iniciais</div>
+        <div class="inline-list" style="margin-bottom:8px;">${c.start_prof.map(s=>`<span class="tag">${s}</span>`).join('')}</div>` : ''}
+        ${c.spells_start ? `<div class="section-box-title" style="margin-top:6px;">Magias Iniciais</div>
+        <div style="font-size:12px; color:#c8d8e0; font-style:italic;">${Array.isArray(c.spells_start) ? c.spells_start.join(' / ') : c.spells_start}</div>` : ''}
+        <div style="margin-top:8px; display:flex; gap:12px; font-size:13px;">
+          <span style="color:#B8922A;">💰 ${c.gold} CO</span>
+          ${c.equipment !== '—' ? `<span style="color:#9a9aaa;">${c.equipment}</span>` : ''}
+        </div>
+      </div>` : ''}
+    `;
+    grid.appendChild(div);
+  });
+
+  document.getElementById('career-count').textContent = state.careers.length;
+  document.getElementById('btn-next-2').disabled = state.careers.length !== 2;
+}
+
+function toggleCareer(id) {
+  if (state.careers.includes(id)) {
+    state.careers = state.careers.filter(c => c !== id);
+  } else if (state.careers.length < 2) {
+    state.careers.push(id);
+  }
+  renderCareers();
+}
+
+function renderBenefits() {
+  const arch = ARCHETYPES[state.arch];
+  document.getElementById('benefit-sub').textContent = `Arquétipo ${arch.name}: escolha um benefício inicial. Você poderá adquirir mais conforme ganha experiência.`;
+  const grid = document.getElementById('benefit-grid');
+  grid.innerHTML = '';
+  arch.benefits.forEach((b,i) => {
+    const div = document.createElement('div');
+    div.className = 'benefit-card' + (state.benefit === i ? ' selected' : '');
+    div.onclick = () => { state.benefit = i; renderBenefits(); };
+    div.innerHTML = `
+      <div class="benefit-card-name">${state.benefit === i ? '✓ ' : ''}${b.name}</div>
+      <div class="benefit-card-desc">${b.desc}</div>
+    `;
+    grid.appendChild(div);
+  });
+  document.getElementById('btn-next-3').disabled = state.benefit === null;
+}
+
+function renderSheet() {
+  const race = RACES[state.race];
+  const arch = ARCHETYPES[state.arch];
+  const career1 = CAREERS.find(c => c.id === state.careers[0]);
+  const career2 = CAREERS.find(c => c.id === state.careers[1]);
+  const benefit = arch.benefits[state.benefit];
+
+  // Merge skills
+  const allSkills = [...new Set([...career1.start_skills, ...career2.start_skills])];
+  // Merge mil/prof - if same, level 2
+  const milMap = {};
+  [...career1.start_mil, ...career2.start_mil].forEach(s => {
+    const m = s.match(/(.+?)\s+(\d+)$/);
+    if (m) {
+      const [,name,lv] = m;
+      milMap[name] = (milMap[name] || 0) + parseInt(lv);
+    } else { milMap[s] = milMap[s] || 1; }
+  });
+  const profMap = {};
+  [...career1.start_prof, ...career2.start_prof].forEach(s => {
+    const m = s.match(/(.+?)\s+(\d+)$/);
+    if (m) {
+      const [,name,lv] = m;
+      profMap[name] = (profMap[name] || 0) + parseInt(lv);
+    } else { profMap[s] = profMap[s] || 1; }
+  });
+
+  // Connections
+  const conn = [...new Set([...(career1.connections||[]), ...(career2.connections||[])])];
+  // Gold
+  const gold = career1.gold + career2.gold;
+  // Spells
+  const spells1 = career1.spells || [];
+  const spells2 = career2.spells || [];
+  const allSpells = [...new Set([...(career1.spells_start||[]), ...(career2.spells_start||[])])];
+
+  // Special race extras
+  const raceExtras = [];
+  if (state.race === 'anao') raceExtras.push('Suportar Carga (gratuita)', 'Conexão: Clã Anão');
+  if (state.race === 'gobber') raceExtras.push('Ágil (gratuito)', '+1 DEF');
+  if (state.race === 'trolloide') raceExtras.push('Durão (gratuito)', 'Façanha: Revitalizar (gratuita)');
+  if (state.race === 'ogrun') raceExtras.push('Estatura Enorme');
+  if (state.race === 'iosano') raceExtras.push('Habilidade extra da carreira');
+  if (state.race === 'nyss') raceExtras.push('+1 Iniciativa/PER', '+3 ARM vs Frio', '–3 ARM vs Fogo');
+
+  const archBonuses = {
+    dotado: 'Tradição: ' + (state.careers.includes('conj_guerra') ? 'Focalizador (ARC 2)' : 'Tecelão da Vontade (ARC 3)') + '. Pode lançar magias.',
+    habilidoso: 'Ataque adicional ao atacar na fase de ativação.',
+    intelectual: '+1 ataque e dano para você e aliados no alcance de comando.',
+    poderoso: 'Reduz todo dano sofrido em 1 ponto (mínimo 1).',
+  };
+
+  const html = `
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-name">Novo Personagem dos Reinos de Ferro</div>
+      <div class="sheet-subtitle">
+        ${race.name} · ${arch.name} · ${career1.name} / ${career2.name}
+      </div>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-col">
+        <div class="sheet-section">
+          <div class="sheet-section-title">Atributos Base (Inicial → Herói → Vet. → Épico)</div>
+          ${Object.entries(race.attrs).map(([a,v]) => `
+          <div class="attr-row">
+            <span class="attr-name">${a}</span>
+            <div class="attr-vals">
+              <div class="attr-val"><div class="attr-val-num" style="color:#D4A840">${v[0]===null?'—':v[0]}</div><div class="attr-val-lim">ini</div></div>
+              <div class="attr-val"><div class="attr-val-num">${v[1]===null?'—':v[1]}</div><div class="attr-val-lim">her</div></div>
+              <div class="attr-val"><div class="attr-val-num">${v[2]===null?'—':v[2]}</div><div class="attr-val-lim">vet</div></div>
+              <div class="attr-val"><div class="attr-val-num">${v[3]===null?'—':v[3]}</div><div class="attr-val-lim">épi</div></div>
+            </div>
+          </div>`).join('')}
+        </div>
+
+        <div class="sheet-section">
+          <div class="sheet-section-title">Bônus do Arquétipo — ${arch.name}</div>
+          <div style="font-size:14px; color:#c8d8e0; font-style:italic; margin-bottom:8px;">${archBonuses[state.arch]}</div>
+          <div style="font-size:13px; color:#D4A840; font-weight:600;">${benefit.name}</div>
+          <div style="font-size:13px; color:#9a9aaa; margin-top:2px;">${benefit.desc}</div>
+        </div>
+
+        ${raceExtras.length ? `<div class="sheet-section">
+          <div class="sheet-section-title">Especiais Raciais — ${race.name}</div>
+          <div class="pill-list">${raceExtras.map(e=>`<span class="pill steam">${e}</span>`).join('')}</div>
+        </div>` : ''}
+
+        <div class="sheet-section">
+          <div class="sheet-section-title">Dados Raciais</div>
+          <div style="font-size:13px; color:#9a9aaa; line-height:1.8;">
+            <div><span style="color:#B8922A;">Idiomas:</span> ${race.lang}</div>
+            <div><span style="color:#B8922A;">Altura:</span> ${race.height}</div>
+            <div><span style="color:#B8922A;">Peso:</span> ${race.weight}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-col">
+        <div class="sheet-section">
+          <div class="sheet-section-title">Carreiras</div>
+          <div style="margin-bottom:8px;">
+            <div style="font-family:'Cinzel',serif; font-size:14px; color:#D4A840;">${career1.name}</div>
+            <div style="font-size:12px; color:#9a9aaa; font-style:italic;">${career1.role}</div>
+          </div>
+          <div>
+            <div style="font-family:'Cinzel',serif; font-size:14px; color:#D4A840;">${career2.name}</div>
+            <div style="font-size:12px; color:#9a9aaa; font-style:italic;">${career2.role}</div>
+          </div>
+        </div>
+
+        <div class="sheet-section">
+          <div class="sheet-section-title">Habilidades Iniciais</div>
+          <div class="pill-list">${allSkills.map(s=>`<span class="pill gold">${s}</span>`).join('')}</div>
+        </div>
+
+        <div class="sheet-section">
+          <div class="sheet-section-title">Perícias Militares</div>
+          <div class="pill-list">${Object.entries(milMap).map(([n,l])=>`<span class="pill rust">${n} ${l>1?l:1}</span>`).join('') || '<span style="color:#5a5a6a; font-size:13px;">Nenhuma</span>'}</div>
+        </div>
+
+        <div class="sheet-section">
+          <div class="sheet-section-title">Perícias Profissionais</div>
+          <div class="pill-list">${Object.entries(profMap).map(([n,l])=>`<span class="pill">${n} ${Math.min(l,4)}</span>`).join('')}</div>
+        </div>
+
+        ${conn.length ? `<div class="sheet-section">
+          <div class="sheet-section-title">Conexões</div>
+          <div class="pill-list">${conn.map(c=>`<span class="pill steam">${c}</span>`).join('')}</div>
+        </div>` : ''}
+
+        <div class="sheet-section">
+          <div class="sheet-section-title">Bens Iniciais</div>
+          <div style="font-size:14px; color:#D4A840; font-family:'Cinzel',serif;">💰 ${gold} Coroas de Ouro</div>
+          ${career1.equipment !== '—' ? `<div style="font-size:13px; color:#9a9aaa; margin-top:4px;">${career1.name}: ${career1.equipment}</div>` : ''}
+          ${career2.equipment !== '—' ? `<div style="font-size:13px; color:#9a9aaa; margin-top:2px;">${career2.name}: ${career2.equipment}</div>` : ''}
+        </div>
+
+        ${allSpells.length || spells1.length || spells2.length ? `<div class="sheet-section" style="grid-column:1/-1;">
+          <div class="sheet-section-title">Magias Disponíveis</div>
+          ${allSpells.length ? `<div style="margin-bottom:8px;"><div style="font-size:12px; color:#B8922A; margin-bottom:4px;">MAGIAS INICIAIS</div><div style="font-size:13px; color:#c8d8e0;">${Array.isArray(allSpells)?allSpells.join(' | '):allSpells}</div></div>` : ''}
+          ${[...spells1,...spells2].map(s=>`<div style="margin-bottom:6px; font-size:13px; color:#9a9aaa; border-left:2px solid #3a3a42; padding-left:8px;">${s}</div>`).join('')}
+        </div>` : ''}
+      </div>
+    </div>
+
+    <div style="padding: 16px 28px; border-top: 1px solid rgba(184,146,42,0.2); font-size:13px; color:#5a5a6a; font-style:italic; text-align:center;">
+      Reinos de Ferro RPG · Livro Básico · Jambô Editora 2014 · Bryan Cutler / Privateer Press
+    </div>
+  </div>`;
+
+  document.getElementById('sheet-container').innerHTML = html;
+}
+
+// ========== NAVIGATION ==========
+
+function nextStep() {
+  if (state.step === 0 && !state.race) return;
+  if (state.step === 1 && !state.arch) return;
+  if (state.step === 2 && state.careers.length !== 2) return;
+  if (state.step === 3 && state.benefit === null) return;
+
+  state.step++;
+  updateUI();
+}
+
+function prevStep() {
+  if (state.step > 0) { state.step--; updateUI(); }
+}
+
+function resetAll() {
+  state = { step:0, race:null, arch:null, careers:[], benefit:null };
+  updateUI();
+}
+
+function updateUI() {
+  // Hide all panels
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+state.step).classList.add('active');
+
+  // Update steps bar
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('done','active');
+    if (i < state.step) el.classList.add('done');
+    else if (i === state.step) el.classList.add('active');
+  });
+  for (let i=0; i<4; i++) {
+    const line = document.getElementById('line-'+i);
+    if (line) line.classList.toggle('done', i < state.step);
+  }
+
+  // Render current step
+  if (state.step === 0) renderRaces();
+  else if (state.step === 1) renderArchetypes();
+  else if (state.step === 2) renderCareers();
+  else if (state.step === 3) renderBenefits();
+  else if (state.step === 4) renderSheet();
+}
+
+// Init
+renderRaces();
+</script>
+</body>
+</html>
